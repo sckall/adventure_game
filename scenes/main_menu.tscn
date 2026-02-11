@@ -1,0 +1,186 @@
+[gd_scene load_steps=2 format=3 uid="uid://main_menu"]
+
+[ext_resource type="Script" path="res://scripts/main_menu.gd" id="1_menu"]
+
+[node name="MainMenu" type="Control"]
+process_mode = 3
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_menu")
+
+[node name="Bg" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+color = Color(0.05, 0.08, 0.14, 1)
+
+[node name="BackgroundParticles" type="CPUParticles2D" parent="."]
+position = Vector2(960, 540)
+z_index = -1
+emitting = true
+amount = 80
+lifetime = 10.0
+emission_sphere_radius = 1200.0
+gravity = Vector2(0, -8)
+scale_amount_min = 3.0
+scale_amount_max = 8.0
+color = Color(1, 0.95, 0.8, 0.15)
+emission_shape = 2
+
+[node name="TitleGlow" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -350.0
+offset_top = 70.0
+offset_right = 350.0
+offset_bottom = 170.0
+grow_horizontal = 2
+color = Color(1.0, 0.8, 0.3, 0.35)
+z_index = -1
+
+[node name="Title" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -320.0
+offset_top = 80.0
+offset_right = 320.0
+offset_bottom = 160.0
+grow_horizontal = 2
+text = "Chui的冒险"
+horizontal_alignment = 1
+
+[node name="Subtitle" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -220.0
+offset_top = 165.0
+offset_right = 220.0
+offset_bottom = 200.0
+grow_horizontal = 2
+text = "平台冒险游戏"
+horizontal_alignment = 1
+
+[node name="VictoryInfo" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -400.0
+offset_top = 220.0
+offset_right = 400.0
+offset_bottom = 280.0
+grow_horizontal = 2
+text = "🎯 胜利条件：到达终点门即可过关！收集🍄和🧪获得更高分数！"
+horizontal_alignment = 1
+
+[node name="BtnContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -210.0
+offset_top = 50.0
+offset_right = 210.0
+offset_bottom = 500.0
+grow_horizontal = 2
+alignment = 1
+
+[node name="BtnStart" type="Button" parent="BtnContainer"]
+layout_mode = 2
+mouse_filter = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 420.0
+offset_bottom = 70.0
+text = "选择角色开始"
+
+[node name="BtnContinue" type="Button" parent="BtnContainer"]
+layout_mode = 2
+mouse_filter = 0
+offset_left = 0.0
+offset_top = 85.0
+offset_right = 420.0
+offset_bottom = 155.0
+text = "继续游戏"
+
+[node name="BtnExit" type="Button" parent="BtnContainer"]
+layout_mode = 2
+mouse_filter = 0
+offset_left = 0.0
+offset_top = 170.0
+offset_right = 420.0
+offset_bottom = 240.0
+text = "退出游戏"
+
+[node name="BtnShop" type="Button" parent="BtnContainer"]
+layout_mode = 2
+mouse_filter = 0
+offset_left = 0.0
+offset_top = 255.0
+offset_right = 420.0
+offset_bottom = 325.0
+text = "🛒 商店"
+
+[node name="BtnSave" type="Button" parent="BtnContainer"]
+layout_mode = 2
+mouse_filter = 0
+offset_left = 0.0
+offset_top = 340.0
+offset_right = 420.0
+offset_bottom = 410.0
+text = "💾 存档"
+
+[node name="Stats" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 0.0
+anchor_bottom = 0.0
+offset_left = 25.0
+offset_top = 25.0
+offset_right = 450.0
+offset_bottom = 80.0
+grow_horizontal = 2
+text = "⏰ --:-- [--]  🍄 蘑菇: 0  🟢 绿瓶: 0  🟡 黄瓶: 0"
+
+[node name="CharLabel" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 0.0
+offset_left = -520.0
+offset_top = 25.0
+offset_right = -25.0
+offset_bottom = 70.0
+grow_horizontal = 2
+text = "⚔️ 当前英雄: 战士 (近战专家)"
+horizontal_alignment = 2
+
+[node name="ControlsInfo" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 0.0
+anchor_right = 1.0
+offset_left = 25.0
+offset_top = 580.0
+offset_right = -25.0
+offset_bottom = 660.0
+grow_horizontal = 2
+text = "🎮 操作说明：A/D 移动 | 空格 跳跃 | E 互动 | K 攻击 | L 特殊技能 | P 暂停"
+horizontal_alignment = 1

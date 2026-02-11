@@ -1,0 +1,63 @@
+[gd_scene load_steps=3 format=3 uid="uid://bat_enemy"]
+
+[ext_resource type="Script" path="res://scripts/bat.gd" id="1_bat"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_bat"]
+radius = 14.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_hurt"]
+radius = 16.0
+
+[node name="Bat" type="CharacterBody2D"]
+script = ExtResource("1_bat")
+groups = ["enemies"]
+collision_layer = 2
+collision_mask = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_bat")
+
+[node name="HurtArea" type="Area2D" parent="."]
+collision_layer = 1
+collision_mask = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HurtArea"]
+shape = SubResource("CircleShape2D_hurt")
+
+[node name="Body" type="ColorRect" parent="."]
+offset_left = -6.0
+offset_top = -4.0
+offset_right = 6.0
+offset_bottom = 4.0
+color = Color(0.7, 0.3, 0.8, 1)
+
+[node name="WingLeft" type="ColorRect" parent="."]
+offset_left = -14.0
+offset_top = -8.0
+offset_right = -6.0
+offset_bottom = 0.0
+color = Color(0.7, 0.3, 0.8, 1)
+
+[node name="WingRight" type="ColorRect" parent="."]
+offset_left = 6.0
+offset_top = -8.0
+offset_right = 14.0
+offset_bottom = 0.0
+color = Color(0.7, 0.3, 0.8, 1)
+
+[node name="Eye" type="ColorRect" parent="."]
+offset_left = -2.0
+offset_top = -3.0
+offset_right = 2.0
+offset_bottom = 0.0
+color = Color(1, 0.5, 0.5, 1)
+
+[node name="HealthBar" type="ProgressBar" parent="."]
+offset_left = -14.0
+offset_top = -20.0
+offset_right = 14.0
+offset_bottom = -16.0
+show_percentage = false
+value = 100.0
+
+[connection signal="body_entered" from="HurtArea" to="." method="_on_hurt_area_body_entered"]

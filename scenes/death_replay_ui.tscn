@@ -1,0 +1,87 @@
+[gd_scene load_steps=2 format=3 uid="uid://death_replay_ui"]
+
+[ext_resource type="Script" path="res://scripts/death_replay_ui.gd" id="1_replay_ui"]
+
+[node name="DeathReplayUI" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_replay_ui")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.85)
+z_index = -1
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -350.0
+offset_top = -250.0
+offset_right = 350.0
+offset_bottom = 250.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="Title" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "💀 你被击败了！"
+horizontal_alignment = 1
+
+[node name="Stats" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "死亡分析:
+• 平均与Boss距离: 100
+• 危险时间占比: 50%
+• Boss攻击次数: 5"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="ProgressContainer" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxContainer/ProgressContainer"]
+layout_mode = 2
+text = "回放进度:"
+horizontal_alignment = 1
+
+[node name="ProgressBar" type="ProgressBar" parent="VBoxContainer/ProgressContainer"]
+layout_mode = 2
+max_value = 100.0
+value = 0.0
+show_percentage = false
+
+[node name="ProgressLabel" type="Label" parent="VBoxContainer/ProgressContainer"]
+layout_mode = 2
+text = "0:00 / 0:30"
+horizontal_alignment = 1
+
+[node name="Buttons" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="ReplayBtn" type="Button" parent="VBoxContainer/Buttons"]
+layout_mode = 2
+text = "📹 重播回放"
+
+[node name="RetryBtn" type="Button" parent="VBoxContainer/Buttons"]
+layout_mode = 2
+text = "🔄 重新挑战"
+
+[node name="SkipBtn" type="Button" parent="VBoxContainer/Buttons"]
+layout_mode = 2
+text = "➡️ 返回菜单"

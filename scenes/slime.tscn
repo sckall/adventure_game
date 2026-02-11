@@ -1,0 +1,84 @@
+[gd_scene format=3 uid="uid://bslime8h7k2n1"]
+
+[ext_resource type="Script" path="res://scripts/slime.gd" id="1_slime"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_slime"]
+radius = 16.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_hurt"]
+radius = 18.0
+
+[node name="Slime" type="CharacterBody2D"]
+script = ExtResource("1_slime")
+groups = ["enemies"]
+collision_layer = 2
+collision_mask = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_slime")
+
+[node name="HurtArea" type="Area2D" parent="."]
+collision_layer = 1
+collision_mask = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HurtArea"]
+shape = SubResource("CircleShape2D_hurt")
+
+[node name="Body" type="ColorRect" parent="."]
+offset_left = -14.0
+offset_top = -12.0
+offset_right = 14.0
+offset_bottom = 12.0
+color = Color(0.3, 0.8, 0.3, 1)
+
+[node name="Highlight" type="ColorRect" parent="."]
+offset_left = -10.0
+offset_top = -10.0
+offset_right = 10.0
+offset_bottom = -6.0
+color = Color(1, 1, 1, 0.3)
+
+[node name="EyesContainer" type="Node2D" parent="."]
+position = Vector2(0, -8)
+
+[node name="EyeLeft" type="ColorRect" parent="EyesContainer"]
+offset_left = -6.0
+offset_top = -6.0
+offset_right = 0.0
+offset_bottom = 0.0
+color = Color(1, 1, 1, 1)
+
+[node name="EyeRight" type="ColorRect" parent="EyesContainer"]
+offset_left = 0.0
+offset_top = -6.0
+offset_right = 6.0
+offset_bottom = 0.0
+color = Color(1, 1, 1, 1)
+
+[node name="PupilLeft" type="ColorRect" parent="EyesContainer"]
+offset_left = -4.0
+offset_top = -4.0
+offset_right = -1.0
+offset_bottom = -1.0
+color = Color(0.1, 0.1, 0.1, 1)
+
+[node name="PupilRight" type="ColorRect" parent="EyesContainer"]
+offset_left = 1.0
+offset_top = -4.0
+offset_right = 4.0
+offset_bottom = -1.0
+color = Color(0.1, 0.1, 0.1, 1)
+
+[node name="HealthBar" type="ProgressBar" parent="."]
+offset_left = -16.0
+offset_top = -28.0
+offset_right = 16.0
+offset_bottom = -24.0
+show_percentage = false
+value = 100.0
+
+[node name="HealthFill" type="ColorRect" parent="HealthBar"]
+layout_mode = 2
+color = Color(0.9, 0.2, 0.2, 1)
+
+[connection signal="body_entered" from="HurtArea" to="." method="_on_hurt_area_body_entered"]

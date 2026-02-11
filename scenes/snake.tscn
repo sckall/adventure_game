@@ -1,0 +1,42 @@
+[gd_scene load_steps=3 format=3 uid="uid://bsnake"]
+
+[ext_resource type="Script" path="res://scripts/snake.gd" id="1_snake"]
+
+[sub_resource type="RectangleShape2D" id="R1"]
+size = Vector2(35, 15)
+
+[node name="Snake" type="CharacterBody2D"]
+script = ExtResource("1_snake")
+
+[node name="Body" type="ColorRect" parent="."]
+offset_left = -17.0
+offset_top = -7.0
+offset_right = 18.0
+offset_bottom = 8.0
+color = Color(0.3, 0.7, 0.3, 1)
+
+[node name="Tongue" type="ColorRect" parent="."]
+offset_left = 15.0
+offset_top = -4.0
+offset_right = 25.0
+offset_bottom = 2.0
+color = Color(0.9, 0.3, 0.3, 0.8)
+
+[node name="Eyes" type="ColorRect" parent="."]
+offset_left = -12.0
+offset_top = -6.0
+offset_right = -5.0
+offset_bottom = -2.0
+color = Color(1, 1, 0.3, 1)
+
+[node name="Collision" type="CollisionShape2D" parent="."]
+position = Vector2(0, 1)
+shape = SubResource("R1")
+
+[node name="HurtArea" type="Area2D" parent="."]
+
+[node name="HurtShape" type="CollisionShape2D" parent="HurtArea"]
+position = Vector2(0, 1)
+shape = SubResource("R1")
+
+[connection signal="body_entered" from="HurtArea" to="." method="_on_body_entered"]
