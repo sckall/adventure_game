@@ -48,6 +48,11 @@ var can_fireball: bool = true
 var fireball_cooldown: float = 0.8
 var fireball_cooldown_timer: float = 0.0
 
+# 受伤无敌时间
+var invincible: bool = false
+var invincible_duration: float = 1.0
+var invincible_timer: float = 0.0
+
 var hp: int = 3
 var max_hp: int = 3
 var can_heal: bool = true
@@ -344,6 +349,15 @@ func process_cooldowns(delta):
 		piercing_shot_cooldown_timer -= delta
 
 func perform_jump():
+	if piercing_shot_cooldown_timer > 0:
+		piercing_shot_cooldown_timer -= delta
+	
+	# 无敌时间倒计时
+	if invincible:
+		invincible_timer -= delta
+		if invincible_timer <= 0:
+			invincible = false
+
 	velocity.y = jump_force
 	can_jump_buffer = false
 	can_coyote_jump = false
@@ -734,8 +748,12 @@ func _reset_body_parts():
 	body_rect.position = Vector2.ZERO
 
 func take_damage():
-	if is_shielded:
+	if is_shielded or invincible:
 		return
+	
+	# 设置无敌时间
+	invincible = true
+	invincible_timer = invincible_duration
 	
 	_reset_body_parts()  # 重置之前的变形
 	
@@ -753,6 +771,14 @@ func take_damage():
 		respawn()
 		hp = max_hp
 	update_body_color()
+
+func _on_area_2d_body_entered(collider):
+	if collider.name == "Exit":
+		get_parent()._on_player_reached_exit()
+	
+	# 检查是否是敌人（只有敌人造成伤害）
+	if (collider.is_in_group("enemies") or collider.has_meta("type")) and not invincible:
+		take_damage()
 
 func _on_area_2d_body_entered(collider):
 	if collider.name == "Exit":

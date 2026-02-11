@@ -9,6 +9,9 @@ radius = 16.0
 radius = 18.0
 
 [node name="Hedgehog" type="CharacterBody2D"]
+groups = ["enemies"]
+collision_layer = 2
+collision_mask = 1
 script = ExtResource("1_hedgehog")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]

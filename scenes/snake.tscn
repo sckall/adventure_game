@@ -6,6 +6,9 @@
 size = Vector2(35, 15)
 
 [node name="Snake" type="CharacterBody2D"]
+groups = ["enemies"]
+collision_layer = 2
+collision_mask = 1
 script = ExtResource("1_snake")
 
 [node name="Body" type="ColorRect" parent="."]
