@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# ============ 极简测试推送 ============
+# 运行: ./test
+# 或直接拖拽这个文件到终端执行
+
+cd "/Users/guojiong/Desktop/0.1编程项目/【合集】游戏/chui_adventure"
+
+echo "=== Git提交 ==="
+git add -A
+git commit -m "Auto update: $(date '+%H:%M')" 2>/dev/null
+
+echo "=== Git推送 ==="
+git push origin main 2>&1
+
+echo "=== Godot测试 ==="
+"/Volumes/SSD/app/Godot.app/Contents/MacOS/Godot" --path . --quiet --headless 2>&1 | head -20
+
+echo "=== 完成 ==="
