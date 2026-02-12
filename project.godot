@@ -1,14 +1,9 @@
-; Engine configuration file.
-; Format:
-;   [section] ; section goes between []
-;   param=value ; assign values to parameters
-
 config_version=5
 
 [application]
 
-config/name="简单地牢冒险"
-run/main_scene="res://scripts/Game.gd"
+config/name="Adventure Game"
+run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 config/icon="res://icon.svg"
 
@@ -21,9 +16,9 @@ window/size/viewport_height=720
 
 ui_left={"deadzone":0.5,"events":[]}
 ui_right={"deadzone":0.5,"events":[]}
+ui_up={"deadzone":0.5,"events":[]}
 ui_accept={"deadzone":0.5,"events":[]}
 
 [rendering]
 
 renderer/rendering_method="gl_compatibility"
-renderer/rendering_method.mobile="gl_compatibility"
