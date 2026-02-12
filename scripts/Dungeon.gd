@@ -1,183 +1,332 @@
 extends Node2D
 
-# ============ 简单地牢 ============
+# ============ 像素地牢生成器 ============
 
-var platforms = []
-var enemies = []
-var items = []
-var exit_door
+const TILE_SIZE := 32
+const GRID_WIDTH := 52
+const GRID_HEIGHT := 22
 
-var level_num = 1
-var level_width = 2000
-var level_height = 600
+var level_num := 1
+var platforms: Array = []
+var enemies: Array = []
+var items: Array = []
+var exit_door: Area2D
+
+var _bg_layer: Node2D
+var _deco_layer: Node2D
+var _tile_layer: Node2D
+var _entity_layer: Node2D
 
 func _ready():
+	randomize()
+	_setup_layers()
 	generate_level(1)
 
-func generate_level(num):
+func _setup_layers() -> void:
+	_bg_layer = Node2D.new()
+	_bg_layer.name = "Background"
+	add_child(_bg_layer)
+
+	_deco_layer = Node2D.new()
+	_deco_layer.name = "Decorations"
+	add_child(_deco_layer)
+
+	_tile_layer = Node2D.new()
+	_tile_layer.name = "Tiles"
+	add_child(_tile_layer)
+
+	_entity_layer = Node2D.new()
+	_entity_layer.name = "Entities"
+	add_child(_entity_layer)
+
+func generate_level(num: int) -> void:
 	level_num = num
 	clear_level()
-	
-	print("=== 生成地牢 %d ===" % num)
-	
-	# 地面
-	create_floor()
-	
-	# 平台
-	create_platforms(10 + num * 2)
-	
-	# 敌人
-	create_enemies(5 + num)
-	
-	# 道具
-	create_items(3 + num)
-	
-	# 出口
+	_draw_background()
+	_place_ambient_crystals(8 + int(level_num / 2))
+	_create_border_walls()
+	_create_floor_band()
+	_create_platform_clusters(8 + level_num * 2)
+	_place_torches(5 + int(level_num / 2))
+	_place_pillars(6)
+	create_enemies(4 + level_num)
+	create_items(5 + level_num)
 	create_exit()
-	
-	print("完成: %d平台, %d敌人, %d道具" % [platforms.size(), enemies.size(), items.size()])
 
-func clear_level():
-	for n in [platforms, enemies, items]:
-		for obj in n:
+func clear_level() -> void:
+	for group in [platforms, enemies, items]:
+		for obj in group:
 			if is_instance_valid(obj):
 				obj.queue_free()
-		n.clear()
+		group.clear()
+
 	if exit_door and is_instance_valid(exit_door):
 		exit_door.queue_free()
 	exit_door = null
 
-func create_floor():
-	var floor = StaticBody2D.new()
-	floor.position = Vector2(level_width/2, level_height + 50)
-	
-	var shape = CollisionShape2D.new()
-	shape.shape = RectangleShape2D.new()
-	shape.shape.size = Vector2(level_width + 200, 100)
-	shape.position = Vector2(0, 50)
-	floor.add_child(shape)
-	
-	var rect = ColorRect.new()
-	rect.size = Vector2(level_width + 200, 100)
-	rect.position = Vector2(-(level_width + 200)/2, 0)
-	rect.color = Color(0.3, 0.25, 0.2)
-	floor.add_child(rect)
-	
-	add_child(floor)
-	platforms.append(floor)
+	for layer in [_bg_layer, _deco_layer, _tile_layer, _entity_layer]:
+		for n in layer.get_children():
+			n.queue_free()
 
-func create_platforms(count):
+func _draw_background() -> void:
+	for y in range(GRID_HEIGHT):
+		for x in range(GRID_WIDTH):
+			var t := ColorRect.new()
+			t.size = Vector2(TILE_SIZE, TILE_SIZE)
+			t.position = Vector2(x * TILE_SIZE, y * TILE_SIZE)
+			var checker := (x + y) % 2 == 0
+			var base_color := Color(0.05, 0.06, 0.10) if checker else Color(0.07, 0.08, 0.12)
+			var depth_tint := float(y) / float(GRID_HEIGHT) * 0.08
+			t.color = base_color.lightened(depth_tint)
+			_bg_layer.add_child(t)
+
+	var top_fog := ColorRect.new()
+	top_fog.position = Vector2.ZERO
+	top_fog.size = Vector2(GRID_WIDTH * TILE_SIZE, 170)
+	top_fog.color = Color(0.07, 0.09, 0.16, 0.32)
+	_bg_layer.add_child(top_fog)
+
+	var vignette := ColorRect.new()
+	vignette.position = Vector2.ZERO
+	vignette.size = Vector2(GRID_WIDTH * TILE_SIZE, GRID_HEIGHT * TILE_SIZE)
+	vignette.color = Color(0.0, 0.0, 0.0, 0.12)
+	_bg_layer.add_child(vignette)
+
+func _place_ambient_crystals(count: int) -> void:
 	for i in range(count):
-		var x = 200 + randi() % (level_width - 400)
-		var y = 200 + randi() % (level_height - 300)
-		var w = 100 + randi() % 100
-		create_platform(x, y, w)
+		var pos := _pick_walkable_spawn() + Vector2(0, -16)
+		var glow := ColorRect.new()
+		glow.position = pos - Vector2(9, 9)
+		glow.size = Vector2(18, 18)
+		glow.color = Color(0.32, 0.86, 1.0, 0.25)
+		_deco_layer.add_child(glow)
 
-func create_platform(x, y, w):
-	var plat = StaticBody2D.new()
-	plat.position = Vector2(x, y)
-	
-	var shape = CollisionShape2D.new()
-	shape.shape = RectangleShape2D.new()
-	shape.shape.size = Vector2(w, 20)
-	plat.add_child(shape)
-	
-	var rect = ColorRect.new()
-	rect.size = Vector2(w, 20)
-	rect.color = Color(0.4, 0.5, 0.3)
-	plat.add_child(rect)
-	
-	add_child(plat)
-	platforms.append(plat)
+		var core := ColorRect.new()
+		core.position = pos - Vector2(4, 6)
+		core.size = Vector2(8, 12)
+		core.color = Color(0.54, 0.97, 1.0, 0.88)
+		_deco_layer.add_child(core)
 
-func create_enemies(count):
-	var types = ["slime", "bat", "hedgehog"]
+func _create_border_walls() -> void:
+	for x in range(GRID_WIDTH):
+		_create_solid_tile(x, GRID_HEIGHT - 1, Color(0.20, 0.18, 0.15), true)
+	for y in range(GRID_HEIGHT):
+		_create_solid_tile(0, y, Color(0.14, 0.13, 0.12), false)
+		_create_solid_tile(GRID_WIDTH - 1, y, Color(0.14, 0.13, 0.12), false)
+
+func _create_floor_band() -> void:
+	for x in range(1, GRID_WIDTH - 1):
+		_create_solid_tile(x, GRID_HEIGHT - 2, Color(0.28, 0.24, 0.20), true)
+
+func _create_platform_clusters(cluster_count: int) -> void:
+	for i in range(cluster_count):
+		var length := randi_range(2, 6)
+		var y := randi_range(5, GRID_HEIGHT - 5)
+		var x := randi_range(2, GRID_WIDTH - length - 2)
+		for j in range(length):
+			_create_solid_tile(x + j, y, Color(0.24, 0.31, 0.24), true)
+
+func _create_solid_tile(tile_x: int, tile_y: int, tile_color: Color, with_moss: bool) -> void:
+	var body := StaticBody2D.new()
+	body.position = Vector2(tile_x * TILE_SIZE + TILE_SIZE * 0.5, tile_y * TILE_SIZE + TILE_SIZE * 0.5)
+
+	var shape := CollisionShape2D.new()
+	var rect_shape := RectangleShape2D.new()
+	rect_shape.size = Vector2(TILE_SIZE, TILE_SIZE)
+	shape.shape = rect_shape
+	body.add_child(shape)
+
+	var visual := ColorRect.new()
+	visual.size = Vector2(TILE_SIZE - 2, TILE_SIZE - 2)
+	visual.position = Vector2(-TILE_SIZE * 0.5 + 1, -TILE_SIZE * 0.5 + 1)
+	visual.color = tile_color
+	body.add_child(visual)
+
+	var top_detail := ColorRect.new()
+	top_detail.size = Vector2(TILE_SIZE - 8, 3)
+	top_detail.position = Vector2(-TILE_SIZE * 0.5 + 4, -TILE_SIZE * 0.5 + 3)
+	top_detail.color = tile_color.lightened(0.25)
+	body.add_child(top_detail)
+
+	if with_moss and randf() < 0.35:
+		var moss := ColorRect.new()
+		moss.size = Vector2(randi_range(6, 14), 3)
+		moss.position = Vector2(-TILE_SIZE * 0.5 + randi_range(3, 12), -TILE_SIZE * 0.5 + 1)
+		moss.color = Color(0.22, 0.47, 0.27)
+		body.add_child(moss)
+
+	_tile_layer.add_child(body)
+	platforms.append(body)
+
+func _place_torches(count: int) -> void:
 	for i in range(count):
-		var plat = platforms.pick_random()
-		if plat:
-			create_enemy(plat.position.x, plat.position.y - 30, types.pick_random())
+		var pos := _pick_walkable_spawn() + Vector2(0, -30)
+		var glow := ColorRect.new()
+		glow.position = pos - Vector2(14, 26)
+		glow.size = Vector2(28, 42)
+		glow.color = Color(0.96, 0.68, 0.25, 0.26)
+		_deco_layer.add_child(glow)
 
-func create_enemy(x, y, type):
-	var enemy = Node2D.new()
-	enemy.name = type
+		var holder := ColorRect.new()
+		holder.position = pos - Vector2(2, 2)
+		holder.size = Vector2(4, 12)
+		holder.color = Color(0.42, 0.32, 0.18)
+		_deco_layer.add_child(holder)
+
+		var flame := ColorRect.new()
+		flame.position = pos - Vector2(4, 10)
+		flame.size = Vector2(8, 8)
+		flame.color = Color(1.0, 0.80, 0.35)
+		_deco_layer.add_child(flame)
+
+func _place_pillars(count: int) -> void:
+	for i in range(count):
+		var pos := _pick_walkable_spawn()
+		var pillar := ColorRect.new()
+		pillar.position = pos + Vector2(-10, -48)
+		pillar.size = Vector2(20, 48)
+		pillar.color = Color(0.24, 0.24, 0.30, 0.70)
+		_deco_layer.add_child(pillar)
+
+func create_enemies(count: int) -> void:
+	var types := ["slime", "bat", "skeleton"]
+	for i in range(count):
+		var spawn := _pick_walkable_spawn()
+		create_enemy(spawn.x, spawn.y - 20, types.pick_random())
+
+func create_enemy(x: float, y: float, kind: String) -> void:
+	var enemy := Node2D.new()
+	enemy.name = kind
 	enemy.position = Vector2(x, y)
-	
-	# 颜色
-	var color = Color.GREEN
-	match type:
-		"bat": color = Color(0.5, 0.3, 0.6)
-		"hedgehog": color = Color(0.6, 0.5, 0.3)
-	
-	var body = ColorRect.new()
-	body.size = Vector2(28, 28)
-	body.position = Vector2(-14, -14)
-	body.color = color
+	enemy.set_meta("type", kind)
+	enemy.set_meta("hp", 1 + int(level_num / 3))
+	enemy.set_meta("speed", 25.0 + level_num * 3.0)
+	enemy.set_meta("spawn_y", y)
+	enemy.set_meta("phase", randf() * TAU)
+
+	var body := ColorRect.new()
+	body.size = Vector2(22, 22)
+	body.position = Vector2(-11, -11)
+	match kind:
+		"bat":
+			body.color = Color(0.50, 0.32, 0.62)
+		"skeleton":
+			body.color = Color(0.72, 0.72, 0.72)
+		_:
+			body.color = Color(0.38, 0.72, 0.35)
 	enemy.add_child(body)
-	
-	# 碰撞
-	var area = Area2D.new()
-	var shape = CollisionShape2D.new()
-	shape.shape = CircleShape2D.new()
-	shape.shape.radius = 14
-	area.add_child(shape)
-	enemy.add_child(area)
-	
-	# 数据
-	enemy.set_meta("type", type)
-	enemy.set_meta("hp", 1)
-	
-	add_child(enemy)
+
+	var eye := ColorRect.new()
+	eye.size = Vector2(10, 4)
+	eye.position = Vector2(-5, -3)
+	eye.color = Color(0.98, 0.95, 0.95)
+	enemy.add_child(eye)
+
+	var outline := ColorRect.new()
+	outline.size = Vector2(24, 2)
+	outline.position = Vector2(-12, 11)
+	outline.color = Color(0.08, 0.08, 0.10, 0.55)
+	enemy.add_child(outline)
+
+	var hitbox := Area2D.new()
+	var shape := CollisionShape2D.new()
+	var circle := CircleShape2D.new()
+	circle.radius = 12
+	shape.shape = circle
+	hitbox.add_child(shape)
+	enemy.add_child(hitbox)
+
+	_entity_layer.add_child(enemy)
 	enemies.append(enemy)
 
-func create_items(count):
-	var types = ["mushroom", "bottle"]
+func create_items(count: int) -> void:
+	var types := ["mushroom", "bottle"]
 	for i in range(count):
-		var plat = platforms.pick_random()
-		if plat:
-			create_item(plat.position.x, plat.position.y - 30, types.pick_random())
+		var spawn := _pick_walkable_spawn()
+		create_item(spawn.x, spawn.y - 24, types.pick_random())
 
-func create_item(x, y, type):
-	var item = Area2D.new()
-	item.name = type
+func create_item(x: float, y: float, kind: String) -> void:
+	var item := Area2D.new()
+	item.name = kind
 	item.position = Vector2(x, y)
-	
-	var shape = CollisionShape2D.new()
-	shape.shape = CircleShape2D.new()
-	shape.shape.radius = 10
+
+	var shape := CollisionShape2D.new()
+	var circle := CircleShape2D.new()
+	circle.radius = 10
+	shape.shape = circle
 	item.add_child(shape)
-	
-	var rect = ColorRect.new()
-	rect.size = Vector2(16, 16)
-	rect.position = Vector2(-8, -8)
-	rect.color = Color.RED if type == "mushroom" else Color.GREEN
+
+	var halo := ColorRect.new()
+	halo.size = Vector2(24, 24)
+	halo.position = Vector2(-12, -12)
+	halo.color = Color(0.95, 0.88, 0.4, 0.22)
+	item.add_child(halo)
+
+	var rect := ColorRect.new()
+	rect.size = Vector2(14, 14)
+	rect.position = Vector2(-7, -7)
+	rect.color = Color(0.92, 0.20, 0.25) if kind == "mushroom" else Color(0.20, 0.86, 0.44)
 	item.add_child(rect)
-	
-	add_child(item)
+
+	_entity_layer.add_child(item)
 	items.append(item)
 
-func create_exit():
+func create_exit() -> void:
 	exit_door = Area2D.new()
 	exit_door.name = "Exit"
-	exit_door.position = Vector2(level_width - 80, level_height - 20)
-	
-	var shape = CollisionShape2D.new()
-	shape.shape = RectangleShape2D.new()
-	shape.shape.size = Vector2(40, 60)
-	exit_door.add_child(shape)
-	
-	var rect = ColorRect.new()
-	rect.size = Vector2(40, 60)
-	rect.position = Vector2(-20, -30)
-	rect.color = Color(1.0, 0.9, 0.3)
-	exit_door.add_child(rect)
-	
-	add_child(exit_door)
+	var p := _pick_walkable_spawn()
+	exit_door.position = Vector2(p.x, p.y - 10)
 
-func _process(delta):
-	# 敌人AI：向玩家移动
-	var player = get_tree().get_first_node_in_group("player")
-	if player:
-		for enemy in enemies:
-			if is_instance_valid(enemy):
-				var dir = (player.position - enemy.position).normalized()
-				enemy.position += dir * 40.0 * delta
+	var shape := CollisionShape2D.new()
+	var rect_shape := RectangleShape2D.new()
+	rect_shape.size = Vector2(26, 40)
+	shape.shape = rect_shape
+	exit_door.add_child(shape)
+
+	var glow := ColorRect.new()
+	glow.size = Vector2(40, 52)
+	glow.position = Vector2(-20, -26)
+	glow.color = Color(0.95, 0.83, 0.30, 0.20)
+	exit_door.add_child(glow)
+
+	var frame := ColorRect.new()
+	frame.size = Vector2(30, 44)
+	frame.position = Vector2(-15, -22)
+	frame.color = Color(0.36, 0.28, 0.12)
+	exit_door.add_child(frame)
+
+	var rect := ColorRect.new()
+	rect.size = Vector2(24, 38)
+	rect.position = Vector2(-12, -19)
+	rect.color = Color(0.95, 0.82, 0.28)
+	exit_door.add_child(rect)
+
+	_entity_layer.add_child(exit_door)
+
+func _pick_walkable_spawn() -> Vector2:
+	var x := randi_range(3, GRID_WIDTH - 4) * TILE_SIZE + TILE_SIZE * 0.5
+	var y := randi_range(7, GRID_HEIGHT - 6) * TILE_SIZE + TILE_SIZE * 0.5
+	return Vector2(x, y)
+
+func get_spawn_point() -> Vector2:
+	return Vector2(3 * TILE_SIZE, (GRID_HEIGHT - 4) * TILE_SIZE)
+
+func _process(delta: float) -> void:
+	var player := get_tree().get_first_node_in_group("player")
+	if not player:
+		return
+
+	for enemy in enemies:
+		if not is_instance_valid(enemy):
+			continue
+		var to_player := player.position - enemy.position
+		if to_player.length() < 0.001:
+			continue
+		var dir := to_player.normalized()
+		var speed := float(enemy.get_meta("speed"))
+		enemy.position += dir * speed * delta
+
+		if enemy.name == "bat":
+			var phase := float(enemy.get_meta("phase"))
+			var base_y := float(enemy.get_meta("spawn_y"))
+			enemy.position.y = lerpf(enemy.position.y, base_y + sin(Time.get_ticks_msec() / 260.0 + phase) * 5.0, 0.12)
