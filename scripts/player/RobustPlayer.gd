@@ -58,7 +58,7 @@ func _ready():
 	
 	print("Player: 初始化完成 HP:%d" % hp)
 
-func _physics_process(delta: _ready():
+func _physics_process(delta: float):
 	if not is_alive:
 		return
 	
@@ -244,9 +244,9 @@ func _create_attack_area():
 	
 	add_child(area)
 	
-	# 0.1秒后移除
-	await get_tree().create_timer(0.1).timeout
-	area.queue_free()
+	# 0.1秒后移除（使用定时器避免await问题）
+	var timer = get_tree().create_timer(0.1)
+	timer.timeout.connect(area.queue_free)
 
 # ============ 实用方法 ============
 func get_facing_direction() -> Vector2:
