@@ -151,6 +151,8 @@ func create_enemy(x: float, y: float, kind: String) -> void:
 	enemy.set_meta("type", kind)
 	enemy.set_meta("hp", 1 + int(level_num / 3))
 	enemy.set_meta("speed", 25.0 + level_num * 3.0)
+	enemy.set_meta("spawn_y", y)
+	enemy.set_meta("phase", randf() * TAU)
 
 	var body := ColorRect.new()
 	body.size = Vector2(22, 22)
@@ -255,6 +257,16 @@ func _process(delta: float) -> void:
 	for enemy in enemies:
 		if not is_instance_valid(enemy):
 			continue
-		var dir := (player.position - enemy.position).normalized()
+		var to_player := player.position - enemy.position
+		if to_player.length() < 0.001:
+			continue
+		var dir := to_player.normalized()
 		var speed := float(enemy.get_meta("speed"))
-		enemy.position += dir * speed * delta
+		var move := dir * speed * delta
+		enemy.position += move
+
+		# 蝙蝠添加轻微上下漂浮，提升动态感
+		if enemy.name == "bat":
+			var phase := float(enemy.get_meta("phase"))
+			var base_y := float(enemy.get_meta("spawn_y"))
+			enemy.position.y = lerpf(enemy.position.y, base_y + sin(Time.get_ticks_msec() / 260.0 + phase) * 5.0, 0.12)
