@@ -217,6 +217,15 @@ func process_dash(delta):
 		is_dashing = false
 		velocity.x = 0
 
+func perform_jump():
+	velocity.y = jump_force
+	can_jump_buffer = false
+	can_coyote_jump = false
+	can_double_jump = true
+	is_jump_holding = true
+	jump_hold_time = 0
+	jump_squash()
+
 func perform_dash():
 	if can_dash and not is_dashing:
 		is_dashing = true
