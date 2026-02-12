@@ -13,6 +13,7 @@ var items: Array = []
 var exit_door: Area2D
 
 var _bg_layer: Node2D
+var _deco_layer: Node2D
 var _tile_layer: Node2D
 var _entity_layer: Node2D
 
@@ -26,6 +27,10 @@ func _setup_layers() -> void:
 	_bg_layer.name = "Background"
 	add_child(_bg_layer)
 
+	_deco_layer = Node2D.new()
+	_deco_layer.name = "Decorations"
+	add_child(_deco_layer)
+
 	_tile_layer = Node2D.new()
 	_tile_layer.name = "Tiles"
 	add_child(_tile_layer)
@@ -38,10 +43,12 @@ func generate_level(num: int) -> void:
 	level_num = num
 	clear_level()
 	_draw_background()
+	_place_ambient_crystals(8 + int(level_num / 2))
 	_create_border_walls()
 	_create_floor_band()
 	_create_platform_clusters(8 + level_num * 2)
 	_place_torches(5 + int(level_num / 2))
+	_place_pillars(6)
 	create_enemies(4 + level_num)
 	create_items(5 + level_num)
 	create_exit()
@@ -57,7 +64,7 @@ func clear_level() -> void:
 		exit_door.queue_free()
 	exit_door = null
 
-	for layer in [_bg_layer, _tile_layer, _entity_layer]:
+	for layer in [_bg_layer, _deco_layer, _tile_layer, _entity_layer]:
 		for n in layer.get_children():
 			n.queue_free()
 
@@ -68,27 +75,48 @@ func _draw_background() -> void:
 			t.size = Vector2(TILE_SIZE, TILE_SIZE)
 			t.position = Vector2(x * TILE_SIZE, y * TILE_SIZE)
 			var checker := (x + y) % 2 == 0
-			var base_color := Color(0.06, 0.07, 0.10) if checker else Color(0.08, 0.09, 0.12)
-			var depth_tint := float(y) / float(GRID_HEIGHT) * 0.05
+			var base_color := Color(0.05, 0.06, 0.10) if checker else Color(0.07, 0.08, 0.12)
+			var depth_tint := float(y) / float(GRID_HEIGHT) * 0.08
 			t.color = base_color.lightened(depth_tint)
 			_bg_layer.add_child(t)
 
 	var top_fog := ColorRect.new()
 	top_fog.position = Vector2.ZERO
-	top_fog.size = Vector2(GRID_WIDTH * TILE_SIZE, 140)
-	top_fog.color = Color(0.05, 0.06, 0.12, 0.28)
+	top_fog.size = Vector2(GRID_WIDTH * TILE_SIZE, 170)
+	top_fog.color = Color(0.07, 0.09, 0.16, 0.32)
 	_bg_layer.add_child(top_fog)
+
+	var vignette := ColorRect.new()
+	vignette.position = Vector2.ZERO
+	vignette.size = Vector2(GRID_WIDTH * TILE_SIZE, GRID_HEIGHT * TILE_SIZE)
+	vignette.color = Color(0.0, 0.0, 0.0, 0.12)
+	_bg_layer.add_child(vignette)
+
+func _place_ambient_crystals(count: int) -> void:
+	for i in range(count):
+		var pos := _pick_walkable_spawn() + Vector2(0, -16)
+		var glow := ColorRect.new()
+		glow.position = pos - Vector2(9, 9)
+		glow.size = Vector2(18, 18)
+		glow.color = Color(0.32, 0.86, 1.0, 0.25)
+		_deco_layer.add_child(glow)
+
+		var core := ColorRect.new()
+		core.position = pos - Vector2(4, 6)
+		core.size = Vector2(8, 12)
+		core.color = Color(0.54, 0.97, 1.0, 0.88)
+		_deco_layer.add_child(core)
 
 func _create_border_walls() -> void:
 	for x in range(GRID_WIDTH):
-		_create_solid_tile(x, GRID_HEIGHT - 1, Color(0.20, 0.18, 0.15))
+		_create_solid_tile(x, GRID_HEIGHT - 1, Color(0.20, 0.18, 0.15), true)
 	for y in range(GRID_HEIGHT):
-		_create_solid_tile(0, y, Color(0.15, 0.14, 0.13))
-		_create_solid_tile(GRID_WIDTH - 1, y, Color(0.15, 0.14, 0.13))
+		_create_solid_tile(0, y, Color(0.14, 0.13, 0.12), false)
+		_create_solid_tile(GRID_WIDTH - 1, y, Color(0.14, 0.13, 0.12), false)
 
 func _create_floor_band() -> void:
 	for x in range(1, GRID_WIDTH - 1):
-		_create_solid_tile(x, GRID_HEIGHT - 2, Color(0.26, 0.24, 0.20))
+		_create_solid_tile(x, GRID_HEIGHT - 2, Color(0.28, 0.24, 0.20), true)
 
 func _create_platform_clusters(cluster_count: int) -> void:
 	for i in range(cluster_count):
@@ -96,9 +124,9 @@ func _create_platform_clusters(cluster_count: int) -> void:
 		var y := randi_range(5, GRID_HEIGHT - 5)
 		var x := randi_range(2, GRID_WIDTH - length - 2)
 		for j in range(length):
-			_create_solid_tile(x + j, y, Color(0.24, 0.30, 0.22))
+			_create_solid_tile(x + j, y, Color(0.24, 0.31, 0.24), true)
 
-func _create_solid_tile(tile_x: int, tile_y: int, tile_color: Color) -> void:
+func _create_solid_tile(tile_x: int, tile_y: int, tile_color: Color, with_moss: bool) -> void:
 	var body := StaticBody2D.new()
 	body.position = Vector2(tile_x * TILE_SIZE + TILE_SIZE * 0.5, tile_y * TILE_SIZE + TILE_SIZE * 0.5)
 
@@ -114,11 +142,18 @@ func _create_solid_tile(tile_x: int, tile_y: int, tile_color: Color) -> void:
 	visual.color = tile_color
 	body.add_child(visual)
 
-	var detail := ColorRect.new()
-	detail.size = Vector2(TILE_SIZE - 8, 4)
-	detail.position = Vector2(-TILE_SIZE * 0.5 + 4, -TILE_SIZE * 0.5 + 3)
-	detail.color = tile_color.lightened(0.2)
-	body.add_child(detail)
+	var top_detail := ColorRect.new()
+	top_detail.size = Vector2(TILE_SIZE - 8, 3)
+	top_detail.position = Vector2(-TILE_SIZE * 0.5 + 4, -TILE_SIZE * 0.5 + 3)
+	top_detail.color = tile_color.lightened(0.25)
+	body.add_child(top_detail)
+
+	if with_moss and randf() < 0.35:
+		var moss := ColorRect.new()
+		moss.size = Vector2(randi_range(6, 14), 3)
+		moss.position = Vector2(-TILE_SIZE * 0.5 + randi_range(3, 12), -TILE_SIZE * 0.5 + 1)
+		moss.color = Color(0.22, 0.47, 0.27)
+		body.add_child(moss)
 
 	_tile_layer.add_child(body)
 	platforms.append(body)
@@ -127,16 +162,31 @@ func _place_torches(count: int) -> void:
 	for i in range(count):
 		var pos := _pick_walkable_spawn() + Vector2(0, -30)
 		var glow := ColorRect.new()
-		glow.position = pos - Vector2(10, 22)
-		glow.size = Vector2(20, 36)
-		glow.color = Color(0.95, 0.66, 0.22, 0.35)
-		_bg_layer.add_child(glow)
+		glow.position = pos - Vector2(14, 26)
+		glow.size = Vector2(28, 42)
+		glow.color = Color(0.96, 0.68, 0.25, 0.26)
+		_deco_layer.add_child(glow)
+
+		var holder := ColorRect.new()
+		holder.position = pos - Vector2(2, 2)
+		holder.size = Vector2(4, 12)
+		holder.color = Color(0.42, 0.32, 0.18)
+		_deco_layer.add_child(holder)
 
 		var flame := ColorRect.new()
-		flame.position = pos - Vector2(4, 8)
+		flame.position = pos - Vector2(4, 10)
 		flame.size = Vector2(8, 8)
-		flame.color = Color(1.0, 0.76, 0.32)
-		_bg_layer.add_child(flame)
+		flame.color = Color(1.0, 0.80, 0.35)
+		_deco_layer.add_child(flame)
+
+func _place_pillars(count: int) -> void:
+	for i in range(count):
+		var pos := _pick_walkable_spawn()
+		var pillar := ColorRect.new()
+		pillar.position = pos + Vector2(-10, -48)
+		pillar.size = Vector2(20, 48)
+		pillar.color = Color(0.24, 0.24, 0.30, 0.70)
+		_deco_layer.add_child(pillar)
 
 func create_enemies(count: int) -> void:
 	var types := ["slime", "bat", "skeleton"]
@@ -172,6 +222,12 @@ func create_enemy(x: float, y: float, kind: String) -> void:
 	eye.color = Color(0.98, 0.95, 0.95)
 	enemy.add_child(eye)
 
+	var outline := ColorRect.new()
+	outline.size = Vector2(24, 2)
+	outline.position = Vector2(-12, 11)
+	outline.color = Color(0.08, 0.08, 0.10, 0.55)
+	enemy.add_child(outline)
+
 	var hitbox := Area2D.new()
 	var shape := CollisionShape2D.new()
 	var circle := CircleShape2D.new()
@@ -201,8 +257,8 @@ func create_item(x: float, y: float, kind: String) -> void:
 	item.add_child(shape)
 
 	var halo := ColorRect.new()
-	halo.size = Vector2(20, 20)
-	halo.position = Vector2(-10, -10)
+	halo.size = Vector2(24, 24)
+	halo.position = Vector2(-12, -12)
 	halo.color = Color(0.95, 0.88, 0.4, 0.22)
 	item.add_child(halo)
 
@@ -226,6 +282,12 @@ func create_exit() -> void:
 	rect_shape.size = Vector2(26, 40)
 	shape.shape = rect_shape
 	exit_door.add_child(shape)
+
+	var glow := ColorRect.new()
+	glow.size = Vector2(40, 52)
+	glow.position = Vector2(-20, -26)
+	glow.color = Color(0.95, 0.83, 0.30, 0.20)
+	exit_door.add_child(glow)
 
 	var frame := ColorRect.new()
 	frame.size = Vector2(30, 44)
@@ -262,10 +324,8 @@ func _process(delta: float) -> void:
 			continue
 		var dir := to_player.normalized()
 		var speed := float(enemy.get_meta("speed"))
-		var move := dir * speed * delta
-		enemy.position += move
+		enemy.position += dir * speed * delta
 
-		# 蝙蝠添加轻微上下漂浮，提升动态感
 		if enemy.name == "bat":
 			var phase := float(enemy.get_meta("phase"))
 			var base_y := float(enemy.get_meta("spawn_y"))

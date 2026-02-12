@@ -42,19 +42,58 @@ func _setup_visual_and_collision() -> void:
 		add_child(collision)
 
 	if not has_node("Body"):
-		var body := ColorRect.new()
+		var body := Node2D.new()
 		body.name = "Body"
-		body.size = Vector2(18, 26)
-		body.position = Vector2(-9, -13)
-		body.color = Color(0.22, 0.75, 0.95)
 		add_child(body)
+
+		var cloak := ColorRect.new()
+		cloak.name = "Cloak"
+		cloak.size = Vector2(16, 18)
+		cloak.position = Vector2(-8, -8)
+		cloak.color = Color(0.12, 0.28, 0.56)
+		body.add_child(cloak)
+
+		var torso := ColorRect.new()
+		torso.name = "Torso"
+		torso.size = Vector2(14, 14)
+		torso.position = Vector2(-7, -12)
+		torso.color = Color(0.22, 0.75, 0.95)
+		body.add_child(torso)
+
+		var head := ColorRect.new()
+		head.name = "Head"
+		head.size = Vector2(12, 10)
+		head.position = Vector2(-6, -20)
+		head.color = Color(0.82, 0.89, 0.98)
+		body.add_child(head)
 
 		var visor := ColorRect.new()
 		visor.name = "Visor"
-		visor.size = Vector2(12, 5)
-		visor.position = Vector2(3, 5)
-		visor.color = Color(0.95, 0.98, 1.0)
+		visor.size = Vector2(8, 3)
+		visor.position = Vector2(-4, -16)
+		visor.color = Color(1.0, 0.97, 0.78)
 		body.add_child(visor)
+
+		var left_leg := ColorRect.new()
+		left_leg.name = "LegL"
+		left_leg.size = Vector2(5, 10)
+		left_leg.position = Vector2(-6, 4)
+		left_leg.color = Color(0.18, 0.21, 0.33)
+		body.add_child(left_leg)
+
+		var right_leg := ColorRect.new()
+		right_leg.name = "LegR"
+		right_leg.size = Vector2(5, 10)
+		right_leg.position = Vector2(1, 4)
+		right_leg.color = Color(0.18, 0.21, 0.33)
+		body.add_child(right_leg)
+
+		var blade := ColorRect.new()
+		blade.name = "Blade"
+		blade.size = Vector2(3, 12)
+		blade.position = Vector2(8, -8)
+		blade.color = Color(0.90, 0.92, 1.0)
+		body.add_child(blade)
 
 func _physics_process(delta: float) -> void:
 	_update_timers(delta)
@@ -101,7 +140,6 @@ func _apply_vertical_movement(delta: float) -> void:
 	var current_gravity := gravity * (fall_gravity_scale if velocity.y > 0.0 else 1.0)
 	velocity.y += current_gravity * delta
 
-	# 松开跳跃键会进行短跳，提升操作精度
 	if Input.is_action_just_released("ui_accept") and velocity.y < -120.0:
 		velocity.y *= 0.58
 
@@ -118,10 +156,21 @@ func _update_visual_feedback(_delta: float) -> void:
 	if not has_node("Body"):
 		return
 
+	var body := $Body
+	body.scale.x = float(facing)
+
+	var move_t := Time.get_ticks_msec() / 120.0
+	var speed_ratio := clamp(absf(velocity.x) / max_speed, 0.0, 1.0)
+	body.position.y = sin(move_t) * 0.8 * speed_ratio
+
+	if body.has_node("LegL") and body.has_node("LegR"):
+		body.get_node("LegL").position.y = 4 + sin(move_t * 1.5) * 1.8 * speed_ratio
+		body.get_node("LegR").position.y = 4 + sin(move_t * 1.5 + PI) * 1.8 * speed_ratio
+
 	if invincible:
-		$Body.modulate.a = 0.45 if int(Time.get_ticks_msec() / 70) % 2 == 0 else 1.0
+		body.modulate.a = 0.45 if int(Time.get_ticks_msec() / 70) % 2 == 0 else 1.0
 	else:
-		$Body.modulate.a = 1.0
+		body.modulate.a = 1.0
 
 func take_damage(amount := 1) -> void:
 	if invincible:
