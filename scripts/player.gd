@@ -780,13 +780,6 @@ func _on_area_2d_body_entered(collider):
 	if (collider.is_in_group("enemies") or collider.has_meta("type")) and not invincible:
 		take_damage()
 
-func _on_area_2d_body_entered(collider):
-	if collider.name == "Exit":
-		get_parent()._on_player_reached_exit()
-	
-	if collider.has_meta("type") and collider.get_meta("type") == "slime":
-		take_damage()
-
 # 玩家攻击区域碰撞 - 对敌人造成伤害
 func _on_body_entered(body):
 	if body.is_in_group("enemies") or body.has_meta("type"):
