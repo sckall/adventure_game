@@ -345,13 +345,6 @@ func process_cooldowns(delta):
 	if holy_shield_cooldown_timer > 0:
 		holy_shield_cooldown_timer -= delta
 
-	if piercing_shot_cooldown_timer > 0:
-		piercing_shot_cooldown_timer -= delta
-
-func perform_jump():
-	if piercing_shot_cooldown_timer > 0:
-		piercing_shot_cooldown_timer -= delta
-	
 	# 无敌时间倒计时
 	if invincible:
 		invincible_timer -= delta
